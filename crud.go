@@ -74,7 +74,7 @@ func createcomment(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Wrong Dish ID")
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
-			str = fmt.Sprintf("INSERT INTO `myfridgefood`.`comments` (`Date`, `Text`, `fk_DishId`, `fk_UserId`) VALUES ( `'%v'` , `'%v'` , `'%v'`, `'%v'` );", comments.Date, comments.Text, comments.fkDishId, comments.fkUserId)
+			str = fmt.Sprintf("INSERT INTO `myfridgefood`.`comments` (`Date`, `Text`, `fk_DishId`, `fk_UserId`) VALUES ( '%v' , '%v' , '%v', '%v' );", comments.Date, comments.Text, comments.fkDishId, comments.fkUserId)
 			fmt.Println(str)
 			res, err := db.Query(str)
 			if err != nil {
