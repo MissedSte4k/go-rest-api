@@ -393,30 +393,49 @@ func getOneingredient(w http.ResponseWriter, r *http.Request) {
 }
 
 func getOnecomment(w http.ResponseWriter, r *http.Request) {
-	if Refresh(w, r) && UserType(w, r) >= 1 {
+	commentID := mux.Vars(r)["id"]
+	db, err := sql.Open("mysql", "root:test@tcp(127.0.0.1)/myfridgefood")
+	commentss := []comment{}
+	results, err := db.Query("Select Date, Text, Id, fk_DishId, fk_UserId FROM comments WHERE fk_DishId = ?", commentID)
 
-		commentID := mux.Vars(r)["id"]
-		db, err := sql.Open("mysql", "root:test@tcp(127.0.0.1)/myfridgefood")
+	if err != nil {
+		panic(err.Error())
+	}
 
-		results, err := db.Query("Select Date, Text, Id, fk_DishId, fk_UserId FROM comments WHERE Id = ?", commentID)
-
+	for results.Next() {
+		var comments comment
+		err = results.Scan(&comments.Date, &comments.Text, &comments.Id, &comments.fkDishId, &comments.fkUserId)
 		if err != nil {
 			panic(err.Error())
 		}
+		commentss = append(commentss, comments)
+	}
+	json.NewEncoder(w).Encode(commentss)
 
-		for results.Next() {
-			var comments comment
-			err = results.Scan(&comments.Date, &comments.Text, &comments.Id, &comments.fkDishId, &comments.fkUserId)
-			if err != nil {
-				panic(err.Error())
-			}
-			if UserType(w, r) == 1 && strconv.Itoa(comments.fkUserId) != TokenIdGet(w, r) {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
+}
 
-			json.NewEncoder(w).Encode(comments)
+func getOnecommentt(w http.ResponseWriter, r *http.Request) {
+	commentID := mux.Vars(r)["id"]
+	db, err := sql.Open("mysql", "root:test@tcp(127.0.0.1)/myfridgefood")
+
+	results, err := db.Query("Select Date, Text, Id, fk_DishId, fk_UserId FROM comments WHERE fk_DishId = ?", commentID)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for results.Next() {
+		var comments comment
+		err = results.Scan(&comments.Date, &comments.Text, &comments.Id, &comments.fkDishId, &comments.fkUserId)
+		if err != nil {
+			panic(err.Error())
 		}
+		if UserType(w, r) == 1 && strconv.Itoa(comments.fkUserId) != TokenIdGet(w, r) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		json.NewEncoder(w).Encode(comments)
 	}
 }
 
@@ -466,7 +485,7 @@ func getAllusers(w http.ResponseWriter, r *http.Request) {
 	if Refresh(w, r) && UserType(w, r) > 1 {
 		db, err := sql.Open("mysql", "root:test@tcp(127.0.0.1)/myfridgefood")
 		results, err := db.Query("Select * FROM users")
-
+		users := []user{}
 		if err != nil {
 			panic(err.Error())
 		}
@@ -478,8 +497,10 @@ func getAllusers(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				panic(err.Error())
 			}
-			json.NewEncoder(w).Encode(user)
+			users = append(users, user)
 		}
+		json.NewEncoder(w).Encode(users)
+
 	}
 }
 
@@ -488,6 +509,7 @@ func getAllingredients(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("mysql", "root:test@tcp(127.0.0.1)/myfridgefood")
 	results, err := db.Query("Select Name, Id FROM ingredients")
 
+	ingredients := []ingredient{}
 	if err != nil {
 		panic(err.Error())
 	}
@@ -499,8 +521,10 @@ func getAllingredients(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err.Error())
 		}
-		json.NewEncoder(w).Encode(ingredient)
+		ingredients = append(ingredients, ingredient)
 	}
+	json.NewEncoder(w).Encode(ingredients)
+
 }
 
 func getAllcomments(w http.ResponseWriter, r *http.Request) {
@@ -528,6 +552,7 @@ func getAlldishes(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("mysql", "root:test@tcp(127.0.0.1)/myfridgefood")
 	results, err := db.Query("Select * FROM dishes")
 
+	dishes := []dish{}
 	if err != nil {
 		panic(err.Error())
 	}
@@ -539,28 +564,32 @@ func getAlldishes(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err.Error())
 		}
-		json.NewEncoder(w).Encode(dish)
+		dishes = append(dishes, dish)
 	}
+	json.NewEncoder(w).Encode(dishes)
+
 }
 
 func getAlldishingredients(w http.ResponseWriter, r *http.Request) {
-
+	dishingredientID := mux.Vars(r)["id"]
 	db, err := sql.Open("mysql", "root:test@tcp(127.0.0.1)/myfridgefood")
-	results, err := db.Query("Select * FROM dishingredients")
 
+	results, err := db.Query("Select dishingredients.Amount, dishingredients.Id, dishingredients.fk_DishId AS fkDishId, dishingredients.fk_IngredientId AS fkIngredientId, ingredients.Name FROM dishingredients JOIN ingredients ON ingredients.Id = dishingredients.fk_IngredientId WHERE dishingredients.Id = ?;", dishingredientID)
+	Datas := []Data{}
 	if err != nil {
 		panic(err.Error())
 	}
 
 	for results.Next() {
-		var dishingredient dishingredient
+		var Data Data
 
-		err = results.Scan(&dishingredient.Id, &dishingredient.Amount, &dishingredient.fkIngredientId, &dishingredient.fkDishId)
+		err = results.Scan(&Data.dishingredient.Amount, &Data.dishingredient.Id, &Data.dishingredient.fkDishId, &Data.dishingredient.fkIngredientId, &Data.ingredient.Name)
 		if err != nil {
 			panic(err.Error())
 		}
-		json.NewEncoder(w).Encode(dishingredient)
+		Datas = append(Datas, Data)
 	}
+	json.NewEncoder(w).Encode(Datas)
 }
 
 func updateuser(w http.ResponseWriter, r *http.Request) {

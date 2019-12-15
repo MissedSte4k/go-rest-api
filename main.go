@@ -69,6 +69,10 @@ type dish struct {
 	Directions  string  `json:"Directions"`
 	fkUserId    int     `json:"fkUserId"`
 }
+type Data struct {
+	dishingredient
+	ingredient
+}
 
 func main() {
 
@@ -102,7 +106,7 @@ func main() {
 	router.HandleFunc("/comments/{id}", deletecomment).Methods("DELETE")
 
 	router.HandleFunc("/dishingredients", createdishingredient).Methods("POST")
-	router.HandleFunc("/dishingredients", getAlldishingredients).Methods("GET")
+	router.HandleFunc("/dishes/{id}/ingredients", getAlldishingredients).Methods("GET")
 	router.HandleFunc("/dishingredients/{id}", getOnedishingredient).Methods("GET")
 	router.HandleFunc("/dishingredients/{id}", updatedishingredient).Methods("PATCH")
 	router.HandleFunc("/dishingredients/{id}", deletedishingredient).Methods("DELETE")
